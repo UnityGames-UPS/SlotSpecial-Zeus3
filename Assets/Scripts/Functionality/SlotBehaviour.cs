@@ -1001,7 +1001,7 @@ public class SlotBehaviour : MonoBehaviour
 
   internal void CallCloseSocket()
   {
-    SocketManager.CloseSocket();
+    StartCoroutine(SocketManager.CloseSocket());
   }
 
 
