@@ -70,10 +70,9 @@ public class PayoutCalculation : MonoBehaviour
   private Image PurpleBarImage;
   [SerializeField]
   private Image RedBarImage;
-
+  [SerializeField] private SocketIOManager socketManager;
+  [SerializeField] private SlotBehaviour slotBehaviour;
   private Coroutine LineCoroutine = null;
-
-  GameObject TempObj = null;
 
   //generate lines at runtime accordingly
   internal void GeneratePayoutLinesBackend(List<int> y_index, int Count, int matCount = 0)
@@ -151,85 +150,98 @@ public class PayoutCalculation : MonoBehaviour
 
   private IEnumerator LineRoutine()
   {
-    float Greenval = (float)GreenWinLinesEnabled.Count / 192f;
-    float Yellowval = (float)YellowWinLinesEnabled.Count / 192;
-    float Purpleval = (float)PurpleWinLinesEnabled.Count / 192;
-    float Redval = (float)RedWinLinesEnabled.Count / 192;
+    float Greenval = (float)GreenWinLinesEnabled.Count / socketManager.initFeat.numberOfLines;
+    float Yellowval = (float)YellowWinLinesEnabled.Count / socketManager.initFeat.numberOfLines;
+    float Purpleval = (float)PurpleWinLinesEnabled.Count / socketManager.initFeat.numberOfLines;
+    float Redval = (float)RedWinLinesEnabled.Count / socketManager.initFeat.numberOfLines;
     if (GreenSlotLines_Text) GreenSlotLines_Text.text = GreenWinLinesEnabled.Count + "\n3" + "\nof" + "\na" + "\nkind";
     if (YellowSlotLines_Text) YellowSlotLines_Text.text = YellowWinLinesEnabled.Count + "\n4" + "\nof" + "\na" + "\nkind";
     if (PurpleSlotLines_Text) PurpleSlotLines_Text.text = PurpleWinLinesEnabled.Count + "\n5" + "\nof" + "\na" + "\nkind";
     if (RedSlotLines_Text) RedSlotLines_Text.text = RedWinLinesEnabled.Count + "\n6" + "\nof" + "\na" + "\nkind";
-    if (GreenSlotLines_Text) GreenSlotLines_Text.gameObject.SetActive(true);
     if (SlotLines_Text) SlotLines_Text.gameObject.SetActive(false);
 
     if (Greenval > 0)
     {
+      if (GreenSlotLines_Text) GreenSlotLines_Text.gameObject.SetActive(true);
       float initAmount = 0;
       DOTween.To(() => initAmount, (val) => initAmount = val, Greenval, 0.2f).OnUpdate(() =>
       {
         if (GreenBarImage) GreenBarImage.fillAmount = initAmount;
       });
+      for (int i = 0; i < GreenWinLinesEnabled.Count; i++)
+      {
+        GreenWinLinesDisabled[i].SetActive(true);
+        yield return new WaitForSecondsRealtime(0.1f);
+        GreenWinLinesEnabled[i].SetActive(true);
+      }
+      // if (GreenSlotLines_Text) GreenSlotLines_Text.gameObject.SetActive(false);
     }
-    for (int i = 0; i < GreenWinLinesEnabled.Count; i++)
-    {
-      GreenWinLinesDisabled[i].SetActive(true);
-      yield return new WaitForSecondsRealtime(0.1f);
-      GreenWinLinesEnabled[i].SetActive(true);
-    }
-    if (YellowSlotLines_Text) YellowSlotLines_Text.gameObject.SetActive(true);
-    if (GreenSlotLines_Text) GreenSlotLines_Text.gameObject.SetActive(false);
     if (Yellowval > 0)
     {
+      ResetTexts();
+      if (YellowSlotLines_Text) YellowSlotLines_Text.gameObject.SetActive(true);
       float initAmount = 0;
       DOTween.To(() => initAmount, (val) => initAmount = val, Yellowval + Greenval, 0.2f).OnUpdate(() =>
       {
         if (YellowBarImage) YellowBarImage.fillAmount = initAmount;
       });
+      for (int i = 0; i < YellowWinLinesEnabled.Count; i++)
+      {
+        YellowWinLinesDisabled[i].SetActive(true);
+        yield return new WaitForSecondsRealtime(0.1f);
+        YellowWinLinesEnabled[i].SetActive(true);
+      }
+      // if (YellowSlotLines_Text) YellowSlotLines_Text.gameObject.SetActive(false);
     }
-    for (int i = 0; i < YellowWinLinesEnabled.Count; i++)
-    {
-      YellowWinLinesDisabled[i].SetActive(true);
-      yield return new WaitForSecondsRealtime(0.1f);
-      YellowWinLinesEnabled[i].SetActive(true);
-    }
-    if (PurpleSlotLines_Text) PurpleSlotLines_Text.gameObject.SetActive(true);
-    if (YellowSlotLines_Text) YellowSlotLines_Text.gameObject.SetActive(false);
     if (Purpleval > 0)
     {
+      ResetTexts();
+      if (PurpleSlotLines_Text) PurpleSlotLines_Text.gameObject.SetActive(true);
       float initAmount = 0;
       DOTween.To(() => initAmount, (val) => initAmount = val, Purpleval + Greenval + Yellowval, 0.2f).OnUpdate(() =>
       {
         if (PurpleBarImage) PurpleBarImage.fillAmount = initAmount;
       });
+      for (int i = 0; i < PurpleWinLinesEnabled.Count; i++)
+      {
+        PurpleWinLinesDisabled[i].SetActive(true);
+        yield return new WaitForSecondsRealtime(0.1f);
+        PurpleWinLinesEnabled[i].SetActive(true);
+      }
+      // if (PurpleSlotLines_Text) PurpleSlotLines_Text.gameObject.SetActive(false);
     }
-    for (int i = 0; i < PurpleWinLinesEnabled.Count; i++)
-    {
-      PurpleWinLinesDisabled[i].SetActive(true);
-      yield return new WaitForSecondsRealtime(0.1f);
-      PurpleWinLinesEnabled[i].SetActive(true);
-    }
-    if (RedSlotLines_Text) RedSlotLines_Text.gameObject.SetActive(true);
-    if (PurpleSlotLines_Text) PurpleSlotLines_Text.gameObject.SetActive(false);
     if (Redval > 0)
     {
+      ResetTexts();
+      if (RedSlotLines_Text) RedSlotLines_Text.gameObject.SetActive(true);
       float initAmount = 0;
       DOTween.To(() => initAmount, (val) => initAmount = val, Redval + Purpleval + Greenval + Yellowval, 0.2f).OnUpdate(() =>
       {
         if (RedBarImage) RedBarImage.fillAmount = initAmount;
       });
+      for (int i = 0; i < RedWinLinesEnabled.Count; i++)
+      {
+        RedWinLinesDisabled[i].SetActive(true);
+        yield return new WaitForSecondsRealtime(0.1f);
+        RedWinLinesEnabled[i].SetActive(true);
+      }
+      // if (RedSlotLines_Text) RedSlotLines_Text.gameObject.SetActive(false);
     }
-    for (int i = 0; i < RedWinLinesEnabled.Count; i++)
+
+    if (slotBehaviour.IsFreeSpin || socketManager.resultData.features.freeSpin.isAdded || socketManager.resultData.features.freeSpin.isTriggered || slotBehaviour.IsAutoSpin)
     {
-      RedWinLinesDisabled[i].SetActive(true);
-      yield return new WaitForSecondsRealtime(0.1f);
-      RedWinLinesEnabled[i].SetActive(true);
+      yield return new WaitForSecondsRealtime(2f);
     }
+    Debug.Log("Called");
+    slotBehaviour.lineShowed = true;
+
     foreach (Transform child in LineContainerEnable)
     {
       child.gameObject.SetActive(false);
     }
+    yield return new WaitForSecondsRealtime(1f);
+    
     if (GreenSlotLines_Text) GreenSlotLines_Text.gameObject.SetActive(true);
-    if (RedSlotLines_Text) RedSlotLines_Text.gameObject.SetActive(false);
     for (int i = 0; i < GreenWinLinesEnabled.Count; i++)
     {
       GreenWinLinesEnabled[i].SetActive(true);
@@ -303,6 +315,14 @@ public class PayoutCalculation : MonoBehaviour
         RedWinLinesEnabled[i].SetActive(false);
       }
     }
+  }
+
+  private void ResetTexts()
+  {
+    YellowSlotLines_Text.gameObject.SetActive(false);
+    PurpleSlotLines_Text.gameObject.SetActive(false);
+    GreenSlotLines_Text.gameObject.SetActive(false);
+    RedSlotLines_Text.gameObject.SetActive(false);
   }
 
   //delete all lines

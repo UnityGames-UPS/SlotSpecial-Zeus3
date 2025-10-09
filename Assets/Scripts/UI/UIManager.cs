@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using DG.Tweening;
 using UnityEngine.UI;
@@ -30,7 +29,7 @@ public class UIManager : MonoBehaviour
   [SerializeField]
   private TMP_Text[] SymbolsText;
   [SerializeField]
-  private TMP_Text Scatter_Text;
+  private TMP_Text FreeSpin_Text;
   [SerializeField]
   private Button Right_Button;
   [SerializeField]
@@ -103,6 +102,7 @@ public class UIManager : MonoBehaviour
   private Button CloseDisconnect_Button;
   [SerializeField]
   private GameObject DisconnectPopup_Object;
+  [SerializeField] private GameObject ReconnectPopup_Object;
 
   [Header("LowBalance Popup")]
   [SerializeField]
@@ -238,7 +238,7 @@ public class UIManager : MonoBehaviour
     if (YesQuit_Button) YesQuit_Button.onClick.AddListener(CallOnExitFunction);
 
     if (CloseDisconnect_Button) CloseDisconnect_Button.onClick.RemoveAllListeners();
-    if (CloseDisconnect_Button) CloseDisconnect_Button.onClick.AddListener(delegate { CallOnExitFunction(); socketManager.ReactNativeCallOnFailedToConnect(); });
+    if (CloseDisconnect_Button) CloseDisconnect_Button.onClick.AddListener(delegate { CallOnExitFunction(); });
 
     if (audioController) audioController.ToggleMute(false);
 
@@ -257,7 +257,6 @@ public class UIManager : MonoBehaviour
 
   void SkipWin()
   {
-    Debug.Log("Skip win called");
     if (ClosePopupTween != null)
     {
       ClosePopupTween.Kill();
@@ -268,7 +267,14 @@ public class UIManager : MonoBehaviour
       WinPopupTextTween.Kill();
       WinPopupTextTween = null;
     }
-    //ClosePopup(BigWinPopup_Object);
+    if (BigWinPopup_Object) BigWinPopup_Object.SetActive(false);
+    if (BigWin_Transform) BigWin_Transform.localPosition = new Vector3(BigWin_Transform.localPosition.x, 890, BigWin_Transform.localPosition.z);
+    if (Star_Object) Star_Object.SetActive(false);
+    if (BG_Transform) BG_Transform.DOScale(Vector3.one, 0.3f);
+    if (Slot_Transform) Slot_Transform.DOScale(Vector3.one, 0.3f);
+    if (WinLinesEnable_Transform) WinLinesEnable_Transform.DOScale(Vector3.one, 0.3f);
+    if (WinLinesDisable_Transform) WinLinesDisable_Transform.DOScale(Vector3.one, 0.3f);
+    if (slotManager) slotManager.CheckPopups = false;
     BigWinPopup_Object.SetActive(false);
     slotManager.CheckPopups = false;
   }
@@ -334,7 +340,24 @@ public class UIManager : MonoBehaviour
     OpenPopup(LBPopup_Object);
   }
 
-  internal void DisconnectionPopup(bool isReconnection)
+  internal void CheckAndClosePopups()
+  {
+    if (ReconnectPopup_Object.activeInHierarchy)
+    {
+      ClosePopup(ReconnectPopup_Object);
+    }
+    if (DisconnectPopup_Object.activeInHierarchy)
+    {
+      ClosePopup(DisconnectPopup_Object);
+    }
+  }
+
+  internal void ReconnectionPopup()
+  {
+    OpenPopup(ReconnectPopup_Object);
+  }
+
+  internal void DisconnectionPopup()
   {
     if (!isExit)
     {
@@ -350,23 +373,25 @@ public class UIManager : MonoBehaviour
     if (BigWin_Transform) BigWin_Transform.DOLocalMoveY(190, 0.3f).OnComplete(delegate
     {
       if (Star_Object) Star_Object.SetActive(true);
-      DOTween.To(() => initAmount, (val) => initAmount = val, amount, 3f).OnUpdate(() =>
+      WinPopupTextTween?.Kill();
+      WinPopupTextTween = DOTween.To(() => initAmount, (val) => initAmount = val, amount, 2f).OnUpdate(() =>
           {
-          if (BigWin_Text) BigWin_Text.text = initAmount.ToString("f3");
-        }).OnComplete(delegate
-        {
-          DOVirtual.DelayedCall(2f, () =>
-              {
-              if (BigWinPopup_Object) BigWinPopup_Object.SetActive(false);
-              if (BigWin_Transform) BigWin_Transform.localPosition = new Vector3(BigWin_Transform.localPosition.x, 890, BigWin_Transform.localPosition.z);
-              if (Star_Object) Star_Object.SetActive(false);
-              if (BG_Transform) BG_Transform.DOScale(Vector3.one, 0.3f);
-              if (Slot_Transform) Slot_Transform.DOScale(Vector3.one, 0.3f);
-              if (WinLinesEnable_Transform) WinLinesEnable_Transform.DOScale(Vector3.one, 0.3f);
-              if (WinLinesDisable_Transform) WinLinesDisable_Transform.DOScale(Vector3.one, 0.3f);
-              if (slotManager) slotManager.CheckPopups = false;
-            });
-        });
+            if (BigWin_Text) BigWin_Text.text = initAmount.ToString("f3");
+          }).OnComplete(delegate
+          {
+            ClosePopupTween?.Kill();
+            ClosePopupTween = DOVirtual.DelayedCall(2f, () =>
+                {
+                  if (BigWinPopup_Object) BigWinPopup_Object.SetActive(false);
+                  if (BigWin_Transform) BigWin_Transform.localPosition = new Vector3(BigWin_Transform.localPosition.x, 890, BigWin_Transform.localPosition.z);
+                  if (Star_Object) Star_Object.SetActive(false);
+                  if (BG_Transform) BG_Transform.DOScale(Vector3.one, 0.3f);
+                  if (Slot_Transform) Slot_Transform.DOScale(Vector3.one, 0.3f);
+                  if (WinLinesEnable_Transform) WinLinesEnable_Transform.DOScale(Vector3.one, 0.3f);
+                  if (WinLinesDisable_Transform) WinLinesDisable_Transform.DOScale(Vector3.one, 0.3f);
+                  if (slotManager) slotManager.CheckPopups = false;
+                });
+          });
     });
     if (BG_Transform) BG_Transform.DOScale(new Vector3(0.8f, 0.8f, 0.8f), 0.3f);
     if (Slot_Transform) Slot_Transform.DOScale(new Vector3(0.8f, 0.8f, 0.8f), 0.3f);
@@ -379,60 +404,55 @@ public class UIManager : MonoBehaviour
     PopulateSymbolsPayout(symbolsText);
   }
 
-  private void PopulateSymbolsPayout(Paylines paylines)
+  internal void PopulateSymbolsPayout(Paylines paylines, bool init = true)
   {
-    PayLines_text.text = socketManager.initialData.linesApiData.Count.ToString() + "\nLines";
-    PayLines_textTwo.text = socketManager.initialData.linesApiData.Count.ToString();
+    PayLines_text.text = socketManager.initFeat.numberOfLines.ToString() + "\nLines";
+    PayLines_textTwo.text = socketManager.initFeat.numberOfLines.ToString();
     for (int i = 0; i < SymbolsText.Length; i++)
     {
       string text = null;
-      if (paylines.symbols[i].Multiplier[0][0] != 0)
+      if (paylines.symbols[i].multiplier[0] != 0)
       {
-        text += paylines.symbols[i].Multiplier[0][0] + "x";
+        text += (paylines.symbols[i].multiplier[0] * socketManager.initialData.bets[slotManager.BetCounter]).ToString();
       }
-      if (paylines.symbols[i].Multiplier[1][0] != 0)
+      if (paylines.symbols[i].multiplier[1] != 0)
       {
-        text += "\n" + paylines.symbols[i].Multiplier[1][0] + "x"; ;
+        text += "\n" + (paylines.symbols[i].multiplier[1] * socketManager.initialData.bets[slotManager.BetCounter]).ToString();
       }
-      if (paylines.symbols[i].Multiplier[2][0] != 0)
+      if (paylines.symbols[i].multiplier[2] != 0)
       {
-        text += "\n" + paylines.symbols[i].Multiplier[2][0];
+        text += "\n" + (paylines.symbols[i].multiplier[2] * socketManager.initialData.bets[slotManager.BetCounter]).ToString();
       }
-      if (SymbolsText[i]) SymbolsText[i].text = text + "x"; ;
+      if (paylines.symbols[i].multiplier[3] != 0)
+      {
+        text += "\n" + (paylines.symbols[i].multiplier[3] * socketManager.initialData.bets[slotManager.BetCounter]).ToString();
+      }
+      if (SymbolsText[i]) SymbolsText[i].text = text;
     }
 
-    for (int i = 0; i < paylines.symbols.Count; i++)
+    if (!init)
+      return;
+
+    FreeSpin fs = socketManager.initFeat.freeSpin;
+    string fsText = "";
+    int j = 5;
+    for (int i = 0; i < fs.mults.Count; i++)
     {
-      if (paylines.symbols[i].Name.ToUpper() == "FREESPIN")
+      if (i != 0)
       {
-        string text = null;
-        if (paylines.symbols[i].Multiplier[0][1] != 0)
-        {
-          text += "5 = " + "<color=yellow>" + paylines.symbols[i].Multiplier[0][1] + " Free Spins</color>";
-        }
-        if (paylines.symbols[i].Multiplier[0][0] != 0)
-        {
-          text += "<color=yellow> + " + paylines.symbols[i].Multiplier[0][0] + "x Total Bet</color>";
-        }
-        if (paylines.symbols[i].Multiplier[1][1] != 0)
-        {
-          text += "\n4 = " + "<color=yellow>" + paylines.symbols[i].Multiplier[1][1] + " Free Spins</color>";
-        }
-        if (paylines.symbols[i].Multiplier[1][0] != 0)
-        {
-          text += "<color=yellow> + " + paylines.symbols[i].Multiplier[1][0] + "x Total Bet</color>";
-        }
-        if (paylines.symbols[i].Multiplier[2][1] != 0)
-        {
-          text += "\n3 = " + "<color=yellow>" + paylines.symbols[i].Multiplier[2][1] + " Free Spins</color>";
-        }
-        if (paylines.symbols[i].Multiplier[2][0] != 0)
-        {
-          text += "<color=yellow> + " + paylines.symbols[i].Multiplier[2][0] + "x Total Bet</color>";
-        }
-        if (Scatter_Text) Scatter_Text.text = text;
+        fsText += "\n";
       }
+      if (fs.mults[i] != 0)
+      {
+        fsText += j.ToString() + " = " + "<color=yellow>" + fs.counts[i] + " Free Spins + " + fs.mults[i] + "x Bet Per Line" + "</color>";
+      }
+      else
+      {
+        fsText += j.ToString() + " = " + "<color=yellow>" + fs.counts[i] + " Free Spins" + "</color>";
+      }
+      j--;
     }
+    FreeSpin_Text.text = fsText;
   }
 
   private void CallOnExitFunction()
@@ -541,6 +561,7 @@ public class UIManager : MonoBehaviour
     {
       if (FSWinPopup_Object) FSWinPopup_Object.SetActive(false);
       FlipSlot();
+      FSTotalwin_text.text = "0.000";
     });
   }
 
@@ -563,8 +584,8 @@ public class UIManager : MonoBehaviour
         if (WinLinesDisable_Transform) WinLinesDisable_Transform.localEulerAngles = new Vector3(0, 180, 0);
         if (BG_Transform) BG_Transform.DOLocalRotate(new Vector3(0, 180, 0), 0.5f).OnComplete(delegate
               {
-            if (BG_Transform) BG_Transform.DOScale(Vector3.one, 0.4f);
-          });
+                if (BG_Transform) BG_Transform.DOScale(Vector3.one, 0.4f);
+              });
 
       });
       if (Slot_Transform) Slot_Transform.DOLocalRotate(new Vector3(0, 90, 0), 0.3f).SetEase(Ease.Linear).OnComplete(delegate
@@ -574,8 +595,8 @@ public class UIManager : MonoBehaviour
         if (ButtonBG_Transform) ButtonBG_Transform.DOLocalMoveX(-1900, 0.5f).OnComplete(delegate { if (ButtonBG_Transform) ButtonBG_Transform.gameObject.SetActive(false); });
         if (Slot_Transform) Slot_Transform.DOLocalRotate(new Vector3(0, 180, 0), 0.5f).OnComplete(delegate
               {
-            if (Slot_Transform) Slot_Transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.Linear);
-          });
+                if (Slot_Transform) Slot_Transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.Linear);
+              });
 
       });
       if (NormalBG_Image) NormalBG_Image.DOFade(0f, 1f).OnComplete(delegate { NormalBG_Image.gameObject.SetActive(false); });
@@ -591,38 +612,38 @@ public class UIManager : MonoBehaviour
       {
         if (BG_Transform) BG_Transform.DOLocalRotate(new Vector3(0, 90, 0), 0.3f).SetEase(Ease.Linear).OnComplete(delegate
               {
-            if (Slot_Image) Slot_Image.sprite = Normal_Sprite;
-            if (MainSlot_Object) MainSlot_Object.SetActive(true);
-            if (MainFlipObject) MainFlipObject.SetActive(false);
-            if (LinesText_Transform) LinesText_Transform.localEulerAngles = new Vector3(0, 0, 0);
-            if (GreenLinesText_Transform) GreenLinesText_Transform.localEulerAngles = new Vector3(0, 0, 0);
-            if (YellowLinesText_Transform) YellowLinesText_Transform.localEulerAngles = new Vector3(0, 0, 0);
-            if (PurpleLinesText_Transform) PurpleLinesText_Transform.localEulerAngles = new Vector3(0, 0, 0);
-            if (RedLinesText_Transform) RedLinesText_Transform.localEulerAngles = new Vector3(0, 0, 0);
-            if (WinLinesEnable_Transform) WinLinesEnable_Transform.localEulerAngles = new Vector3(0, 0, 0);
-            if (WinLinesDisable_Transform) WinLinesDisable_Transform.localEulerAngles = new Vector3(0, 0, 0);
-            if (BG_Transform) BG_Transform.DOLocalRotate(new Vector3(0, 0, 0), 0.5f).OnComplete(delegate
-                  {
-                if (BG_Transform) BG_Transform.DOScale(Vector3.one, 0.4f);
-              });
+                if (Slot_Image) Slot_Image.sprite = Normal_Sprite;
+                if (MainSlot_Object) MainSlot_Object.SetActive(true);
+                if (MainFlipObject) MainFlipObject.SetActive(false);
+                if (LinesText_Transform) LinesText_Transform.localEulerAngles = new Vector3(0, 0, 0);
+                if (GreenLinesText_Transform) GreenLinesText_Transform.localEulerAngles = new Vector3(0, 0, 0);
+                if (YellowLinesText_Transform) YellowLinesText_Transform.localEulerAngles = new Vector3(0, 0, 0);
+                if (PurpleLinesText_Transform) PurpleLinesText_Transform.localEulerAngles = new Vector3(0, 0, 0);
+                if (RedLinesText_Transform) RedLinesText_Transform.localEulerAngles = new Vector3(0, 0, 0);
+                if (WinLinesEnable_Transform) WinLinesEnable_Transform.localEulerAngles = new Vector3(0, 0, 0);
+                if (WinLinesDisable_Transform) WinLinesDisable_Transform.localEulerAngles = new Vector3(0, 0, 0);
+                if (BG_Transform) BG_Transform.DOLocalRotate(new Vector3(0, 0, 0), 0.5f).OnComplete(delegate
+                      {
+                        if (BG_Transform) BG_Transform.DOScale(Vector3.one, 0.4f);
+                      });
 
-          });
+              });
       });
       if (Slot_Transform) Slot_Transform.DOScale(new Vector3(0.8f, 0.8f, 0.8f), 0.3f).SetEase(Ease.Linear).OnComplete(delegate
       {
         if (Slot_Transform) Slot_Transform.DOLocalRotate(new Vector3(0, 90, 0), 0.3f).SetEase(Ease.Linear).OnComplete(delegate
               {
-            if (ButtonBG_Transform) ButtonBG_Transform.gameObject.SetActive(true);
+                if (ButtonBG_Transform) ButtonBG_Transform.gameObject.SetActive(true);
 
 
-            if (ButtonBG_Transform) ButtonBG_Transform.DOLocalMoveX(-489, 0.5f);
-            if (FlipButtonBG_Transform) FlipButtonBG_Transform.DOLocalMoveX(1900, 0.5f).OnComplete(delegate { if (FlipButtonBG_Transform) FlipButtonBG_Transform.gameObject.SetActive(false); });
-            if (Slot_Transform) Slot_Transform.DOLocalRotate(new Vector3(0, 0, 0), 0.5f).OnComplete(delegate
-                  {
-                if (Slot_Transform) Slot_Transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.Linear);
+                if (ButtonBG_Transform) ButtonBG_Transform.DOLocalMoveX(-489, 0.5f);
+                if (FlipButtonBG_Transform) FlipButtonBG_Transform.DOLocalMoveX(1900, 0.5f).OnComplete(delegate { if (FlipButtonBG_Transform) FlipButtonBG_Transform.gameObject.SetActive(false); });
+                if (Slot_Transform) Slot_Transform.DOLocalRotate(new Vector3(0, 0, 0), 0.5f).OnComplete(delegate
+                      {
+                        if (Slot_Transform) Slot_Transform.DOScale(Vector3.one, 0.3f).SetEase(Ease.Linear);
+                      });
+
               });
-
-          });
       });
 
       if (NormalBG_Image) NormalBG_Image.gameObject.SetActive(true);
