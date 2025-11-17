@@ -22182,7 +22182,7 @@ MonoBehaviour:
   slotManager: {fileID: 2046803210}
   uiManager: {fileID: 377874625}
   JSManager: {fileID: 194472076}
-  testToken: f2a8f98536d34ad7ab5e704d240acc1d
+  testToken: 3c5169c8aab945a5a8e830e22a8e36cf
 --- !u!1 &501411899
 GameObject:
   m_ObjectHideFlags: 0
@@ -30220,8 +30220,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1088.53, y: 445}
-  m_SizeDelta: {x: 148.75, y: 122.77}
+  m_AnchoredPosition: {x: 1077, y: 445}
+  m_SizeDelta: {x: 135, y: 122.77}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &677660165
 MonoBehaviour:
