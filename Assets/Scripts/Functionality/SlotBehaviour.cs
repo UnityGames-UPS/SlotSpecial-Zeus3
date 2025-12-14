@@ -735,7 +735,6 @@ public class SlotBehaviour : MonoBehaviour
       }
       StopSpin_Button.gameObject.SetActive(false);
     }
-    audioController.StopWLAaudio();
     for (int i = 0; i < numberOfSlots; i++)
     {
       if (!IsFreeSpin)
@@ -747,6 +746,7 @@ public class SlotBehaviour : MonoBehaviour
         yield return StopTweening(FSSlot_Transform[i], i, StopSpinToggle);
       }
     }
+    audioController.StopWLAaudio();
 
     yield return new WaitForSeconds(0.3f);
     StopSpinToggle = false;
