@@ -61,9 +61,9 @@ mergeInto(LibraryManager.library, {
     SendPostMessage: function(messagePtr) {
       var message = UTF8ToString(messagePtr);
       console.log('SendReactPostMessage, message sent: ' + message);
-      if(window.ReactNativeWebView){
+      if(window.ReactNativeWebView)
+      {
         if(message == "authToken"){
-          window.ReactNativeWebView.postMessage("if message is authtoken");
           var injectedObjectJson = window.ReactNativeWebView.injectedObjectJson();
           var injectedObj = JSON.parse(injectedObjectJson);
 
@@ -81,8 +81,19 @@ mergeInto(LibraryManager.library, {
         }
         window.ReactNativeWebView.postMessage(message);
       }
-      else if(window.parent){
-        if(message == "authToken"){
+      else if (typeof window !== "undefined" && window.parent) {
+        if (typeof window.parent.postMessage === "function"){
+          console.log("Calling window.parent.postMessage");
+          window.parent.postMessage({ 
+            type: message,
+            data: { }
+          }, "*");
+        }
+      }
+      else if(window.parent)
+      {
+        if(message == "authToken")
+        {
           window.addEventListener('message', function(event){
             if(event.data.type === 'authToken'){
               var combinedData = JSON.stringify({
@@ -99,9 +110,6 @@ mergeInto(LibraryManager.library, {
               }
             }
           });
-        }
-        if(window.parent.dispatchReactUnityEvent != null){
-          window.parent.dispatchReactUnityEvent(message);
         }
       }
     }
