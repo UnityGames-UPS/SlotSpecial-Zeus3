@@ -194,10 +194,21 @@ public class SocketIOManager : MonoBehaviour
 
   private void OnError(Error err)
   {
-    Debug.LogError("Socket Error Message: " + err);
+    Debug.LogError("[ERROR] Socket error: " + err);
+    if (!string.IsNullOrEmpty(err.message) && err.message.Contains("Session expired"))
+    {
+      Debug.LogWarning("Session expired detected");
+      OnDisconnected();
 #if UNITY_WEBGL && !UNITY_EDITOR
-    JSManager.SendCustomMessage("error");
+        JSManager.SendCustomMessage("session_expired");
 #endif
+    }
+    else
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        JSManager.SendCustomMessage("error");
+#endif
+    }
   }
 
   private void OnListenEvent(string data)
@@ -488,7 +499,7 @@ public class Player
   public double balance;
 }
 
-[SerializeField]
+[Serializable]
 public class Bonus
 {
   public int BonusSpinStopIndex { get; set; }
@@ -513,7 +524,7 @@ public class Root
   public Player player = new();
 }
 
-[SerializeField]
+[Serializable]
 public class Features
 {
   public FreeSpin freeSpin { get; set; }
@@ -521,7 +532,7 @@ public class Features
   public List<int> wildCols { get; set; }
 }
 
-[SerializeField]
+[Serializable]
 public class FreeSpin
 {
   public List<int> counts;
