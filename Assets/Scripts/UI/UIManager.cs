@@ -187,6 +187,23 @@ public class UIManager : MonoBehaviour
   private Tween WinPopupTextTween;
   private Tween ClosePopupTween;
 
+  private void Awake()
+  {
+    //The JS layer calls SendMessage(gameObject.name, 'OnFocusChanged', value) — OnFocusChanged
+    //below lives on this same GameObject.
+    if (socketManager && socketManager.JSManager)
+      socketManager.JSManager.RegisterVisibilityListener(gameObject.name);
+  }
+
+  //Called from JS via SendMessage — must stay public and keep this exact name.
+  public void OnFocusChanged(string value)
+  {
+    bool focused = value == "1";
+    Debug.Log("UNITY FOCUS CHANGED: " + value + " (focused: " + focused + ")");
+    if (audioController) audioController.SetMuteAll(!focused);
+    if (socketManager) socketManager.HandleFocusChange(focused);
+  }
+
   private void Start()
   {
     if (SlotStart_Button) SlotStart_Button.onClick.RemoveAllListeners();

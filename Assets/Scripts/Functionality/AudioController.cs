@@ -18,28 +18,36 @@ public class AudioController : MonoBehaviour
     audioSpin_button.clip = clips[clips.Length - 2];
   }
 
-  internal void CheckFocusFunction(bool focus, bool IsSpinning)
+  private readonly Dictionary<AudioSource, bool> preFocusMuteState = new Dictionary<AudioSource, bool>();
+  private bool isForceMuted = false;
+
+  private AudioSource[] AllSources()
   {
-    if (!focus)
+    return new AudioSource[] { bg_adudio, audioPlayer_wl, audioPlayer_button, audioSpin_button };
+  }
+
+  //Focus-driven mute — called from BOTH UIManager.OnFocusChanged (JS bridge) and OnApplicationFocus.
+  //Guarded so a duplicate call for the same direction can't clobber the stored "restore to" state.
+  internal void SetMuteAll(bool forceMute)
+  {
+    if (forceMute == isForceMuted) return;
+    isForceMuted = forceMute;
+
+    foreach (AudioSource source in AllSources())
     {
-      bg_adudio.Pause();
-      audioPlayer_wl.Pause();
-      audioPlayer_button.Pause();
-    }
-    else
-    {
-      if (!bg_adudio.mute) bg_adudio.UnPause();
-      if (IsSpinning)
+      if (source == null) continue;
+      if (forceMute)
       {
-        if (!audioPlayer_wl.mute) audioPlayer_wl.UnPause();
+        preFocusMuteState[source] = source.mute;
+        source.mute = true;
       }
       else
       {
-        StopWLAaudio();
+        source.mute = preFocusMuteState.TryGetValue(source, out bool prevMuted) ? prevMuted : source.mute;
       }
-      if (!audioPlayer_button.mute) audioPlayer_button.UnPause();
-
     }
+
+    if (!forceMute) preFocusMuteState.Clear();
   }
 
   internal void PlayWLAudio(string type)
@@ -89,8 +97,12 @@ public class AudioController : MonoBehaviour
     bg_adudio.Stop();
   }
 
+  //User-toggle-driven — the sound/music buttons. An explicit user interaction proves the game has
+  //real interactive focus, so a stale forced-mute must never block it.
   internal void ToggleMute(bool toggle, string type = "all")
   {
+    SetMuteAll(false);
+
     switch (type)
     {
       case "bg":

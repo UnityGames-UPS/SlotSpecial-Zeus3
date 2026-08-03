@@ -365,9 +365,18 @@ public class SlotBehaviour : MonoBehaviour
   }
   #endregion
 
+  //Native/editor focus path — calls the SAME method the WebGL OnFocusChanged path calls.
   private void OnApplicationFocus(bool focus)
   {
-    audioController.CheckFocusFunction(focus, CheckSpinAudio);
+    if (audioController) audioController.SetMuteAll(!focus);
+  }
+
+  //Backend-pushed balance update (balance:sync) — snap the display, no tween, and re-gate the spin.
+  internal void UpdateBalanceDisplay(double newBalance)
+  {
+    currentBalance = newBalance;
+    if (Balance_text) Balance_text.text = newBalance.ToString("F3");
+    CompareBalance();
   }
 
   //function to populate animation sprites accordingly
