@@ -27,7 +27,7 @@ public class SocketIOManager : MonoBehaviour
   private Socket gameSocket;
   private SocketManager manager;
   protected string SocketURI = null;
-  protected string TestSocketURI = "http://localhost:5000/";
+  protected string TestSocketURI = "https://devrealtime.dingdinghouse.com/";
   [SerializeField] internal JSFunctCalls JSManager;
   [SerializeField] private string testToken;
   protected string gameID = "SL-Z3";
@@ -557,6 +557,7 @@ public class GameData
 {
   public List<List<int>> lines;
   public List<double> bets;
+  public double baseBet { get; set; }
 }
 
 [Serializable]

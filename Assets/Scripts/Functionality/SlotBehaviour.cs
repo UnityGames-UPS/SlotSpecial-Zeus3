@@ -222,9 +222,9 @@ public class SlotBehaviour : MonoBehaviour
         BetCounter = SocketManager.initialData.bets.Count - 1;
       }
     }
-    currentTotalBet = SocketManager.initialData.bets[BetCounter] * SocketManager.initFeat.numberOfLines;
+    currentTotalBet = SocketManager.initialData.bets[BetCounter] * SocketManager.initialData.baseBet;
     if (TotalBet_text) TotalBet_text.text = currentTotalBet.ToString("F3");
-    if (Info_text) Info_text.text = SocketManager.initialData.bets[BetCounter] + " BASE BET x " + SocketManager.initFeat.numberOfLines + " BET MULTIPLIER = " + currentTotalBet.ToString("F3") + " TOTAL BET";
+    if (Info_text) Info_text.text = SocketManager.initialData.baseBet + " BASE BET x " + SocketManager.initialData.bets[BetCounter] + " BET MULTIPLIER = " + currentTotalBet.ToString("F3") + " TOTAL BET";
     uiManager.PopulateSymbolsPayout(SocketManager.initUIData.paylines, false);
   }
 
@@ -357,9 +357,9 @@ public class SlotBehaviour : MonoBehaviour
     if (TotalWin_text) TotalWin_text.text = "0.000";
     currentBalance = SocketManager.playerdata.balance;
     if (Balance_text) Balance_text.text = currentBalance.ToString("F3");
-    currentTotalBet = SocketManager.initialData.bets[BetCounter] * SocketManager.initFeat.numberOfLines;
+    currentTotalBet = SocketManager.initialData.bets[BetCounter] * SocketManager.initialData.baseBet;
     if (TotalBet_text) TotalBet_text.text = currentTotalBet.ToString("F3");
-    if (Info_text) Info_text.text = SocketManager.initialData.bets[BetCounter] + " BASE BET x " + SocketManager.initFeat.numberOfLines + " BET MULTIPLIER = " + currentTotalBet.ToString("F3") + " TOTAL BET";
+    if (Info_text) Info_text.text = SocketManager.initialData.baseBet + " BASE BET x " + SocketManager.initialData.bets[BetCounter] + " BET MULTIPLIER = " + currentTotalBet.ToString("F3") + " TOTAL BET";
     CompareBalance();
     uiManager.InitialiseUIData(SocketManager.initUIData.paylines);
   }
